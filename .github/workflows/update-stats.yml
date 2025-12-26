@@ -1,0 +1,74 @@
+name: Update Profile Stats
+
+on:
+  schedule:
+    # Runs every 12 hours at 00:00 and 12:00 UTC
+    - cron: '0 0,12 * * *'
+  workflow_dispatch: # Manual trigger
+
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Fetch GitHub Activity Stats
+        run: |
+          # Fetch user stats from GitHub API
+          GITHUB_USER="amdsolutions007"
+          
+          # Get public repos count
+          REPOS=$(curl -s "https://api.github.com/users/$GITHUB_USER" | jq -r '.public_repos')
+          
+          # Get total commits in the last year (approximation from events)
+          EVENTS=$(curl -s "https://api.github.com/users/$GITHUB_USER/events/public" | jq length)
+          
+          # Get current date
+          CURRENT_DATE=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          
+          # Update README with stats
+          cat > README.md << READMEEOF
+          # 👋 Welcome to AMD Solutions
+          
+          ## 🤖 AI-Powered Automation Expert
+          
+          Building intelligent systems that work while you sleep.
+          
+          ### 📊 Live Stats
+          
+          - 🗂️ **Public Repositories:** $REPOS
+          - 🔄 **Recent Activity Events:** $EVENTS
+          - ⏰ **Last Updated:** $CURRENT_DATE
+          - 🎯 **Status:** 🟢 Fully Operational
+          
+          ### 🚀 Active Projects
+          
+          - [AMD Control Center](https://github.com/amdsolutions007/AMD-Control-Center) - Main automation hub
+          - [TIL Knowledge Bank](https://github.com/amdsolutions007/TIL-Knowledge-Bank) - Daily learning archive
+          
+          ### 🛠️ Tech Stack
+          
+          ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+          ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)
+          ![AI](https://img.shields.io/badge/AI-Powered-orange?style=for-the-badge)
+          
+          ### 💡 Philosophy
+          
+          > "Automate everything. Sleep peacefully."
+          
+          ---
+          
+          **🤖 This profile updates automatically every 12 hours**
+          READMEEOF
+      
+      - name: Commit and Push Changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "Stats Bot"
+          git add README.md
+          git diff --quiet && git diff --staged --quiet || (git commit -m "📊 Auto-update stats: $(date -u +%Y-%m-%d)" && git push)
